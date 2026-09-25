@@ -10,17 +10,17 @@
  *   3. Посилання на форму й таблицю з'являться в «Журналі виконання».
  */
 
-const QUIZ_TITLE = 'Самостійна робота: «Періодичний закон Д. І. Менделєєва»';
+var QUIZ_TITLE = 'Самостійна робота: «Періодичний закон Д. І. Менделєєва»';
 
 // Бали за 12-те питання (відкрита відповідь, перевіряється автоматично).
-const Q12_POINTS = 2;
+var Q12_POINTS = 2;
 
 // Правильні відповіді на 12-те питання (після нормалізації: без пробілів,
 // надрядкові цифри → звичайні, кирилична «с»/«р» → латинська s/p).
-const Q12_ACCEPTED = ['1s22s22p63s23p5', '[ne]3s23p5'];
+var Q12_ACCEPTED = ['1s22s22p63s23p5', '[ne]3s23p5'];
 
 function createQuiz() {
-  const form = FormApp.create(QUIZ_TITLE);
+  var form = FormApp.create(QUIZ_TITLE);
   form
     .setIsQuiz(true)
     .setDescription('Уважно прочитайте кожне питання та оберіть правильну відповідь. ' +
@@ -37,8 +37,8 @@ function createQuiz() {
   }
   form.setLimitOneResponsePerUser(true);
 
-  const nameItem = form.addTextItem().setTitle("Прізвище та ім'я").setRequired(true);
-  const classItem = form.addTextItem().setTitle('Клас').setRequired(true);
+  var nameItem = form.addTextItem().setTitle("Прізвище та ім'я").setRequired(true);
+  var classItem = form.addTextItem().setTitle('Клас').setRequired(true);
 
   addChoice_(form, '1. Серед наведених елементів оберіть найбільш активний металічний елемент:',
     ['Натрій', 'Алюміній', 'Сульфур', 'Манган'], 0, 1);
@@ -60,7 +60,7 @@ function createQuiz() {
   form.addSectionHeaderItem()
     .setTitle('6. Встановіть відповідність між хімічним елементом та його положенням у Періодичній системі')
     .setHelpText('Для кожного положення оберіть елемент. Один елемент зайвий.');
-  const q6Elements = ['K', 'S', 'Se', 'Be', 'Cr'];
+  var q6Elements = ['K', 'S', 'Se', 'Be', 'Cr'];
   addChoice_(form, '6а) 2 період, група IIA', q6Elements, 3, 1);
   addChoice_(form, '6б) 3 період, група VIA', q6Elements, 1, 1);
   addChoice_(form, '6в) 4 період, група IA', q6Elements, 0, 1);
@@ -85,24 +85,24 @@ function createQuiz() {
   addChoice_(form, '11. Позначте назву елемента, що має електронну конфігурацію 1s² 2s² 2p³:',
     ['Натрій', 'Нітроген', 'Фосфор', 'Літій'], 1, 1);
 
-  const q12 = form.addTextItem()
+  var q12 = form.addTextItem()
     .setTitle('12. Розпишіть електронну конфігурацію атома хімічного елемента з порядковим номером 17.')
     .setHelpText('Пишіть так: 1s2 2s2 2p6 … (цифри після букв — кількість електронів).')
     .setPoints(Q12_POINTS)
     .setRequired(true);
 
   // Максимальна кількість балів.
-  let maxPoints = 0;
+  var maxPoints = 0;
   form.getItems().forEach(function (item) {
-    const points = getPoints_(item);
+    var points = getPoints_(item);
     if (points) maxPoints += points;
   });
 
   // Таблиця результатів: аркуш із відповідями + аркуш «Оцінки».
-  const ss = SpreadsheetApp.create('Результати — ' + QUIZ_TITLE);
+  var ss = SpreadsheetApp.create('Результати — ' + QUIZ_TITLE);
   form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
   SpreadsheetApp.flush();
-  const gradesSheet = ss.insertSheet('Оцінки', 0);
+  var gradesSheet = ss.insertSheet('Оцінки', 0);
   gradesSheet.appendRow(['Час', "Прізвище та ім'я", 'Клас', 'E-mail',
     'Бали', 'Максимум', 'Оцінка (12-бальна)', 'Питання 12 (відповідь учня)']);
   gradesSheet.setFrozenRows(1);
@@ -131,16 +131,16 @@ function createQuiz() {
 
 /** Запускається автоматично після кожного надсилання форми. */
 function onQuizSubmit(e) {
-  const props = PropertiesService.getScriptProperties().getProperties();
-  const form = FormApp.openById(props.FORM_ID);
-  let response = e.response;
+  var props = PropertiesService.getScriptProperties().getProperties();
+  var form = FormApp.openById(props.FORM_ID);
+  var response = e.response;
 
   // Автоперевірка питання 12.
-  let q12Answer = '';
+  var q12Answer = '';
   response.getGradableItemResponses().forEach(function (ir) {
     if (String(ir.getItem().getId()) === props.Q12_ID) {
       q12Answer = String(ir.getResponse() || '');
-      const ok = Q12_ACCEPTED.indexOf(normalizeConfig_(q12Answer)) !== -1;
+      var ok = Q12_ACCEPTED.indexOf(normalizeConfig_(q12Answer)) !== -1;
       ir.setScore(ok ? Q12_POINTS : 0);
       response.withItemGrade(ir);
     }
@@ -148,21 +148,21 @@ function onQuizSubmit(e) {
   form.submitGrades([response]);
   response = form.getResponse(response.getId());
 
-  let total = 0;
+  var total = 0;
   response.getGradableItemResponses().forEach(function (ir) {
     total += Number(ir.getScore()) || 0;
   });
 
-  let name = '';
-  let klass = '';
+  var name = '';
+  var klass = '';
   response.getItemResponses().forEach(function (ir) {
-    const id = String(ir.getItem().getId());
+    var id = String(ir.getItem().getId());
     if (id === props.NAME_ID) name = ir.getResponse();
     if (id === props.CLASS_ID) klass = ir.getResponse();
   });
 
-  const max = Number(props.MAX_POINTS);
-  const grade12 = Math.max(1, Math.round(total / max * 12));
+  var max = Number(props.MAX_POINTS);
+  var grade12 = Math.max(1, Math.round(total / max * 12));
 
   SpreadsheetApp.openById(props.SHEET_ID).getSheetByName('Оцінки').appendRow([
     response.getTimestamp(), name, klass, response.getRespondentEmail(),
@@ -171,7 +171,7 @@ function onQuizSubmit(e) {
 }
 
 function addChoice_(form, title, options, correctIndex, points) {
-  const item = form.addMultipleChoiceItem().setTitle(title).setRequired(true);
+  var item = form.addMultipleChoiceItem().setTitle(title).setRequired(true);
   item.setChoices(options.map(function (text, i) {
     return item.createChoice(text, i === correctIndex);
   }));
@@ -180,7 +180,7 @@ function addChoice_(form, title, options, correctIndex, points) {
 }
 
 function addCheckbox_(form, title, options, correctIndexes, points, help) {
-  const item = form.addCheckboxItem().setTitle(title).setRequired(true);
+  var item = form.addCheckboxItem().setTitle(title).setRequired(true);
   if (help) item.setHelpText(help);
   item.setChoices(options.map(function (text, i) {
     return item.createChoice(text, correctIndexes.indexOf(i) !== -1);
@@ -200,7 +200,7 @@ function getPoints_(item) {
 
 /** «1s² 2s² 2р⁶ …» → «1s22s22p6…» */
 function normalizeConfig_(text) {
-  const sup = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4',
+  var sup = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4',
     '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9' };
   return String(text)
     .toLowerCase()
